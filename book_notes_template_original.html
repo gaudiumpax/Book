@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Book Notes — Notebook Style</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#fbf6ef;
+    --ink:#2b2b2b;
+    --muted:#7b6f5f;
+    --accent:#9b5c1f;
+    --rose:#a43a3a;
+    --radius:12px;
+    --pad:18px;
+    --shadow: 0 10px 30px rgba(12,12,12,0.12);
+    font-family: "Merriweather", Georgia, serif;
+    color:var(--ink);
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#efe7d7 0%, #f6efe6 100%)}
+  .container{max-width:980px;margin:28px auto;padding:22px}
+  header{display:flex;justify-content:space-between;margin-bottom:18px}
+  header h1{font-family:"Patrick Hand";color:var(--accent);margin:0}
+
+  .controls{display:flex;gap:10px}
+  .btn{background:linear-gradient(180deg,#fff,#f3e9d8);border:1px solid rgba(0,0,0,0.06);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+  .btn.small{padding:6px 10px;font-size:13px}
+
+  .card{
+    background:repeating-linear-gradient(to bottom,rgba(0,0,0,0.02) 0,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 28px),var(--paper);
+    border-radius:14px;padding:20px;margin-bottom:18px;
+    box-shadow:var(--shadow);
+  }
+  .section-title h2{font-family:"Patrick Hand";color:var(--rose);margin:0}
+
+  textarea,input[type="text"]{width:100%;border:0;background:transparent;padding:8px 10px;font-size:15px;outline:0}
+
+  .list{padding:0;margin:0;list-style:none}
+  .item{display:flex;gap:8px;align-items:center;padding:10px;margin-bottom:8px;background:rgba(255,255,255,0.55);border-radius:10px}
+  .item .text{flex:1;white-space:pre-wrap}
+
+  .btn-ghost{border:1px solid rgba(0,0,0,0.1);padding:4px 8px;border-radius:8px;background:transparent;cursor:pointer}
+  .link{text-decoration:underline;color:var(--rose);font-weight:700}
+
+  .toast{position:fixed;right:20px;bottom:20px;background:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.12);opacity:0;transition:all .3s}
+  .toast.show{opacity:1}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;justify-content:center;align-items:center}
+  .modal{background:var(--paper);padding:18px;border-radius:12px;width:360px}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header>
+  <h1>Book Notes</h1>
+  <div class="controls">
+    <button class="btn" id="exportBtn">Export</button>
+    <label class="btn small">
+      Import
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+    </label>
+    <button class="btn small" id="clearBtn">Clear All</button>
+  </div>
+</header>
+
+<!-- Summary -->
+<section class="card">
+  <div class="section-title"><h2>Summary</h2></div>
+  <textarea id="summary"></textarea>
+  <div style="text-align:right;margin-top:8px">
+    <button class="btn small" id="saveSummaryBtn">Save</button>
+  </div>
+</section>
+
+<!-- Highlights -->
+<section class="card">
+  <div class="section-title"><h2>Highlights</h2></div>
+  <input type="text" id="highlightInput" placeholder="Add highlight...">
+  <button class="btn small" id="addHighlightBtn">Add</button>
+  <ul id="highlightsList" class="list"></ul>
+</section>
+
+<!-- Quotes -->
+<section class="card">
+  <div class="section-title"><h2>Quotes</h2></div>
+  <input type="text" id="quoteText" placeholder="Quote...">
+  <input type="text" id="quoteMeta" placeholder="Author / Page...">
+  <button class="btn small" id="addQuoteBtn">Add Quote</button>
+  <ul id="quotesList" class="list"></ul>
+</section>
+
+<!-- Comments -->
+<section class="card">
+  <div class="section-title"><h2>Comments</h2></div>
+  <textarea id="comments"></textarea>
+  <div style="text-align:right;margin-top:8px">
+    <button class="btn small" id="saveCommentsBtn">Save</button>
+  </div>
+</section>
+
+<!-- Questions -->
+<section class="card">
+  <div class="section-title"><h2>Questions</h2></div>
+  <textarea id="questions"></textarea>
+  <div style="text-align:right;margin-top:8px">
+    <button class="btn small" id="saveQuestionsBtn">Save</button>
+  </div>
+</section>
+
+<!-- Related Books -->
+<section class="card">
+  <div class="section-title"><h2>Related Books</h2></div>
+  <input type="text" id="relatedTitleInput" placeholder="Title">
+  <input type="text" id="relatedUrlInput" placeholder="Link">
+  <button class="btn small" id="addRelatedBtn">Add</button>
+  <ul id="relatedList" class="list"></ul>
+</section>
+
+<!-- Related Materials (NEW) -->
+<section class="card">
+  <div class="section-title"><h2>Related Materials</h2></div>
+  <input type="text" id="materialTitleInput" placeholder="Video / webpage name">
+  <input type="text" id="materialUrlInput" placeholder="Link (URL)">
+  <button class="btn small" id="addMaterialBtn">Add Material</button>
+  <ul id="materialsList" class="list"></ul>
+</section>
+
+<footer style="text-align:center;font-size:12px;color:var(--muted)">
+  Data stored locally in your browser
+</footer>
+
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Modal -->
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="modalTitle">Edit</h3>
+    <div id="modalBody"></div>
+    <div style="text-align:right;margin-top:12px">
+      <button class="btn small" id="modalOk">OK</button>
+      <button class="btn small" id="modalCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'bookNotes_notebook_v1';
+
+  const defaultData = {
+    summary:'',
+    highlights:[],
+    quotes:[],
+    comments:'',
+    questions:'',
+    related:[],
+    materials:[] // NEW
+  };
+
+  const $=s=>document.querySelector(s);
+  const summaryEl=$('#summary');
+  const commentsEl=$('#comments');
+  const questionsEl=$('#questions');
+
+  const highlightInput=$('#highlightInput');
+  const addHighlightBtn=$('#addHighlightBtn');
+  const highlightsList=$('#highlightsList');
+
+  const quoteText=$('#quoteText');
+  const quoteMeta=$('#quoteMeta');
+  const addQuoteBtn=$('#addQuoteBtn');
+  const quotesList=$('#quotesList');
+
+  const relatedTitleInput=$('#relatedTitleInput');
+  const relatedUrlInput=$('#relatedUrlInput');
+  const addRelatedBtn=$('#addRelatedBtn');
+  const relatedList=$('#relatedList');
+
+  const materialTitleInput=$('#materialTitleInput');
+  const materialUrlInput=$('#materialUrlInput');
+  const addMaterialBtn=$('#addMaterialBtn');
+  const materialsList=$('#materialsList');
+
+  const saveSummaryBtn=$('#saveSummaryBtn');
+  const saveCommentsBtn=$('#saveCommentsBtn');
+  const saveQuestionsBtn=$('#saveQuestionsBtn');
+  const exportBtn=$('#exportBtn');
+  const clearBtn=$('#clearBtn');
+  const importFile=$('#importFile');
+
+  const toast=$('#toast');
+  const modalBackdrop=$('#modalBackdrop');
+  const modalTitle=$('#modalTitle');
+  const modalBody=$('#modalBody');
+  const modalOk=$('#modalOk');
+  const modalCancel=$('#modalCancel');
+
+  let data=loadData();
+
+  function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));showToast('Saved');}
+  function loadData(){
+    try{ return Object.assign({},defaultData,JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'));}
+    catch{ return {...defaultData};}
+  }
+
+  function escape(s){return s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"),1400);
+  }
+
+  function renderAll(){
+    summaryEl.value=data.summary;
+    commentsEl.value=data.comments;
+    questionsEl.value=data.questions;
+    renderHighlights();
+    renderQuotes();
+    renderRelated();
+    renderMaterials();
+  }
+
+  /******** Highlights ********/
+  addHighlightBtn.onclick=()=>{
+    const v=highlightInput.value.trim(); if(!v)return;
+    data.highlights.unshift({text:v});
+    highlightInput.value='';
+    save();renderHighlights();
+  };
+
+  function renderHighlights(){
+    if(!data.highlights.length) return highlightsList.innerHTML='<li>No highlights</li>';
+    highlightsList.innerHTML=data.highlights.map((h,i)=>`
+    <li class="item">
+      <div class="text">${escape(h.text)}</div>
+      <button class="btn-ghost" onclick="editHighlight(${i})">Edit</button>
+      <button class="btn-ghost" onclick="deleteHighlight(${i})">Delete</button>
+    </li>
+    `).join('');
+  }
+  window.deleteHighlight=i=>{data.highlights.splice(i,1);save();renderHighlights();}
+  window.editHighlight=i=>{
+    const val=data.highlights[i].text;
+    openModal("Edit highlight", `<textarea id="editVal">${escape(val)}</textarea>`, vals=>{
+      data.highlights[i].text=vals.editVal;save();renderHighlights();
+    });
+  };
+
+  /******** Quotes ********/
+  addQuoteBtn.onclick=()=>{
+    const t=quoteText.value.trim(); if(!t)return;
+    data.quotes.unshift({text:t,meta:quoteMeta.value.trim()});
+    quoteText.value='';quoteMeta.value='';
+    save();renderQuotes();
+  };
+
+  function renderQuotes(){
+    if(!data.quotes.length) return quotesList.innerHTML='<li>No quotes</li>';
+    quotesList.innerHTML=data.quotes.map((q,i)=>`
+    <li class="item">
+      <div class="text"><strong>“${escape(q.text)}”</strong><br><span>${escape(q.meta||'')}</span></div>
+      <button class="btn-ghost" onclick="editQuote(${i})">Edit</button>
+      <button class="btn-ghost" onclick="deleteQuote(${i})">Delete</button>
+    </li>`).join('');
+  }
+  window.deleteQuote=i=>{data.quotes.splice(i,1);save();renderQuotes();}
+  window.editQuote=i=>{
+    const q=data.quotes[i];
+    openModal("Edit quote", `<textarea id="editQ">${escape(q.text)}</textarea>
+    <input id="editM" value="${escape(q.meta)}">`, vals=>{
+      q.text=vals.editQ;q.meta=vals.editM;save();renderQuotes();
+    });
+  };
+
+  /******** Related Books ********/
+  addRelatedBtn.onclick=()=>{
+    const t=relatedTitleInput.value.trim(); if(!t)return;
+    data.related.unshift({title:t,url:relatedUrlInput.value.trim()});
+    relatedTitleInput.value='';relatedUrlInput.value='';
+    save();renderRelated();
+  };
+  function renderRelated(){
+    if(!data.related.length) return relatedList.innerHTML='<li>No related books</li>';
+    relatedList.innerHTML=data.related.map((r,i)=>`
+    <li class="item">
+      <div class="text"><a class="link" href="${escape(r.url)}" target="_blank">${escape(r.title)}</a></div>
+      <button class="btn-ghost" onclick="editRel(${i})">Edit</button>
+      <button class="btn-ghost" onclick="deleteRel(${i})">Delete</button>
+    </li>`).join('');
+  }
+  window.deleteRel=i=>{data.related.splice(i,1);save();renderRelated();}
+  window.editRel=i=>{
+    const r=data.related[i];
+    openModal("Edit", `<input id="editT" value="${escape(r.title)}"><input id="editU" value="${escape(r.url)}" style="margin-top:6px">`, vals=>{
+      r.title=vals.editT;r.url=vals.editU;save();renderRelated();
+    });
+  };
+
+  /******** Related Materials (NEW) ********/
+  addMaterialBtn.onclick=()=>{
+    const t=materialTitleInput.value.trim(); if(!t)return;
+    data.materials.unshift({title:t,url:materialUrlInput.value.trim()});
+    materialTitleInput.value='';materialUrlInput.value='';
+    save();renderMaterials();
+  };
+  function renderMaterials(){
+    if(!data.materials.length) return materialsList.innerHTML='<li>No materials</li>';
+    materialsList.innerHTML=data.materials.map((m,i)=>`
+    <li class="item">
+      <div class="text"><a class="link" href="${escape(m.url)}" target="_blank">${escape(m.title)}</a></div>
+      <button class="btn-ghost" onclick="editMat(${i})">Edit</button>
+      <button class="btn-ghost" onclick="deleteMat(${i})">Delete</button>
+    </li>`).join('');
+  }
+  window.deleteMat=i=>{data.materials.splice(i,1);save();renderMaterials();}
+  window.editMat=i=>{
+    const m=data.materials[i];
+    openModal("Edit", `<input id="editT" value="${escape(m.title)}"><input id="editU" value="${escape(m.url)}" style="margin-top:6px">`, vals=>{
+      m.title=vals.editT;m.url=vals.editU;save();renderMaterials();
+    });
+  };
+
+  /******** Save basic ********/
+  saveSummaryBtn.onclick=()=>{data.summary=summaryEl.value;save();}
+  saveCommentsBtn.onclick=()=>{data.comments=commentsEl.value;save();}
+  saveQuestionsBtn.onclick=()=>{data.questions=questionsEl.value;save();}
+
+  /******** Export / Import ********/
+  exportBtn.onclick=()=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
+    a.download="booknotes.json";
+    a.click();
+  };
+  importFile.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{data=Object.assign({},defaultData,JSON.parse(ev.target.result));save();renderAll();}
+      catch{}
+    };
+    r.readAsText(f);
+  };
+
+  /******** Clear ********/
+  clearBtn.onclick=()=>{
+    data={...defaultData};
+    save();renderAll();
+  };
+
+  /******** Modal ********/
+  function openModal(title,html,onOk){
+    modalTitle.textContent=title;
+    modalBody.innerHTML=html;
+    modalBackdrop.style.display='flex';
+    modalOk.onclick=()=>{onOk(getFormVals());close();};
+    modalCancel.onclick=close;
+  }
+  function close(){modalBackdrop.style.display='none';}
+  function getFormVals(){
+    const vals={};
+    modalBody.querySelectorAll('input,textarea').forEach(i=>vals[i.id]=i.value);
+    return vals;
+  }
+
+  renderAll();
+
+})();
+</script>
+
+</body>
+</html>

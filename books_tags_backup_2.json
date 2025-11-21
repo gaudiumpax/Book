@@ -1,0 +1,35 @@
+{
+  "books": [
+    {
+      "title": "fsdfs",
+      "author": "fdssdf",
+      "year": 33,
+      "link": "",
+      "tags": [
+        "Chemistry"
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "Biology",
+      "color": "#8d6e21"
+    },
+    {
+      "name": "Chemistry",
+      "color": "hsl(36 70% 45%)"
+    },
+    {
+      "name": "Math",
+      "color": "#2f9e44"
+    },
+    {
+      "name": "Philosophy",
+      "color": "hsl(97 70% 45%)"
+    },
+    {
+      "name": "Physics",
+      "color": "#d9480f"
+    }
+  ]
+}

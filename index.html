@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Book Database — Notebook Style</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        margin: 24px;
+        background: #faf8f4; /* light cream */
+        color: #333;
+    }
+    h1 {
+        margin-top: 0;
+        font-weight: 600;
+        border-bottom: 2px solid #e2ddd5;
+        padding-bottom: 4px;
+    }
+    #controls button,
+    button {
+        background: #e8f2f1;
+        border: 1px solid #aac7c4;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    button:hover {
+        background: #d3e7e5;
+    }
+    input[type="text"], input[type="number"], select {
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #c8c2b7;
+        border-radius: 6px;
+        background: #fff;
+    }
+    #searchInput {
+        width: 420px;
+    }
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 16px;
+        background: #ffffffcc;
+        border: 1px solid #e0dbd2;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #eee6d9;
+    }
+    th {
+        background: #f4f1ea;
+        cursor: pointer;
+        user-select: none;
+        font-weight: 600;
+    }
+    tr:hover td {
+        background: #f7f5ef;
+    }
+    .small { font-size:13px; color:#555; }
+    #formModal {
+        position: fixed; inset: 0;
+        display: none;
+        background: rgba(0,0,0,0.3);
+        align-items: center;
+        justify-content: center;
+    }
+    #formCard {
+        background: #fff;
+        padding: 22px;
+        width: 500px;
+        border-radius: 10px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        border: 1px solid #e0dbd2;
+    }
+    #formCard h3 {
+        margin-top: 0;
+        border-bottom: 1px solid #eee6d9;
+        padding-bottom: 6px;
+    }
+    .actions { display:flex; justify-content: space-between; margin-top: 12px; }
+    .muted { color: #666; font-size: 13px; }
+    /* Ensure tag text has spacing */
+    td:nth-child(4) span {
+        margin-right: 6px;
+        display: inline-block;
+    }
+</style>
+</head>
+<body>
+    <h1>Book Database</h1>
+
+    <div id="controls">
+        <button onclick="openForm('add')">Add New Book</button>
+        <button onclick="exportBackup()">Export Backup</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">
+        <button onclick="document.getElementById('importFile').click()">Import Backup</button>
+
+        <span class="muted" style="float:right;">Saved in browser localStorage</span>
+    </div>
+
+    <div>
+        <input type="text" id="searchInput" placeholder="Search by title, author, tags..." oninput="applyFilters()">
+    </div>
+
+    <div class="filters" style="margin-top:10px;">
+        <label>Author:
+            <select id="authorFilter" onchange="applyFilters()"><option value="">All Authors</option></select>
+        </label>
+
+        <label style="margin-left:12px;">Year:
+            <select id="yearFilter" onchange="applyFilters()"><option value="">All Years</option></select>
+        </label>
+
+        <div class="filter-tags" style="margin-top:6px;">
+            <span class="small">Tags:</span>
+            <span id="filterTagContainer" style="margin-left:8px"></span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th onclick="sortBy('title')">Title ▲▼</th>
+                <th onclick="sortBy('author')">Author ▲▼</th>
+                <th onclick="sortBy('year')">Year ▲▼</th>
+                <th>Tags</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="bookTable"></tbody>
+    </table>
+
+    <!-- Modal Form -->
+    <div id="formModal">
+        <div id="formCard">
+            <h3 id="formTitle">Add Book</h3>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <label>Title<br><input type="text" id="f_title" style="width:100%"></label>
+                <label>Author<br><input type="text" id="f_author" style="width:100%"></label>
+                <label>Year<br><input type="number" id="f_year" style="width:120px"></label>
+                <label>Summary link (optional)<br><input type="text" id="f_link" style="width:100%"></label>
+
+                <div>
+                    <strong>Tags</strong><br>
+                    <div id="formTagCheckboxes" style="margin-top:6px"></div>
+                    <div style="margin-top:8px;">
+                        <input type="text" id="newTagInput" placeholder="New tag" style="width:200px;">
+                        <button onclick="addCustomTagFromInput()">Add</button>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <div>
+                        <button id="saveBtn" onclick="saveForm()">Save</button>
+                        <button onclick="closeForm()" type="button">Cancel</button>
+                    </div>
+
+                    <button id="deleteBtn" onclick="deleteFromForm()" type="button" style="background:#f6d6d6; display:none;">Delete</button>
+                </div>
+
+                <input type="hidden" id="editingIndex" value="-1">
+            </div>
+        </div>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>

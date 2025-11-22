@@ -403,6 +403,56 @@ function addCustomTagFromInput() {
     }
 }
 
+
+function randomBook() {
+    const button = document.getElementById("randomBtn");
+
+    // fun effect: shake + show rolling text
+    button.classList.add("rolling");
+    const originalText = button.textContent;
+    button.textContent = "🎲 Rolling...";
+
+    setTimeout(() => {
+        button.classList.remove("rolling");
+        button.textContent = originalText;
+    }, 700);
+
+    // use currently filtered books instead of full list
+    const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+    const selectedAuthor = document.getElementById("authorFilter").value;
+    const selectedYear = document.getElementById("yearFilter").value;
+    const selectedTags = Array.from(document.querySelectorAll(".filterTag:checked")).map(e => e.value);
+
+    const filtered = books.filter(b => {
+        const title = (b.title || "").toLowerCase();
+        const author = (b.author || "").toLowerCase();
+        const tags = (b.tags || []).map(t => t.toLowerCase()).join(" ");
+
+        const textMatch = !q || title.includes(q) || author.includes(q) || tags.includes(q);
+        const authorMatch = !selectedAuthor || b.author === selectedAuthor;
+        const yearMatch = !selectedYear || String(b.year) === selectedYear;
+        const tagsMatch = (selectedTags.length === 0) || selectedTags.every(t => (b.tags || []).includes(t));
+
+        return textMatch && authorMatch && yearMatch && tagsMatch;
+    });
+
+    if (!filtered.length) {
+        alert("No matching books currently visible.");
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * filtered.length);
+    const b = filtered[randomIndex];
+
+    if (b.link && b.link.trim() !== "") {
+        window.open(b.link, "_blank");
+    } else {
+        alert("This random book has no link:\n" + b.title);
+    }
+}
+
+
+
 // --- Initialization ---
 function renderAll() {
     renderTagControls();
